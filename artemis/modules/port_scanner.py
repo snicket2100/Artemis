@@ -245,8 +245,8 @@ class PortScanner(ArtemisBase):
             return False
 
     def run_multiple(self, tasks: List[Task]) -> None:
-        hosts_per_task = {}
-        hosts: List[str] = []
+        ip_addresses_per_task = {}
+        ip_addresses: List[str] = []
 
         for task in tasks:
             target = get_target_host(task)
@@ -254,28 +254,28 @@ class PortScanner(ArtemisBase):
 
             # convert domain to IPs
             if task_type == TaskType.DOMAIN:
-                hosts_per_task[task] = lookup(target)
+                ip_addresses_per_task[task] = lookup(target)
             elif task_type == TaskType.IP:
-                hosts_per_task[task] = {target}
+                ip_addresses_per_task[task] = {target}
             else:
                 raise ValueError("Unknown task type")
-            hosts.extend(hosts_per_task[task])
+            ip_addresses.extend(ip_addresses_per_task[task])
 
-        scan_results = self._scan(hosts)
+        scan_results = self._scan(ip_addresses)
 
         for task in tasks:
             target = get_target_host(task)
             all_results = {}
             open_ports = []
             interesting_port_descriptions = []
-            for host in hosts_per_task[task]:
-                all_results[host] = scan_results.get(host, {})
+            for ip_address in ip_addresses_per_task[task]:
+                all_results[ip_address] = scan_results.get(ip_address, {})
 
-                for port, result in all_results[host].items():
+                for port, result in all_results[ip_address].items():
                     if task.headers["type"] == TaskType.DOMAIN:
                         # we want to perform tls_hadnshake if target is a domain cause TLS can be hostname dependent (SNI)
                         # ip deduplication therefore can lead to false negatives
-                        result["ssl"] = self.tls_handshake(ip=host, port=int(port), domain=target)
+                        result["ssl"] = self.tls_handshake(ip=ip_address, port=int(port), domain=target)
                     new_task = Task(
                         {
                             "type": TaskType.SERVICE,

@@ -91,6 +91,7 @@
                 ajax: {{ api_url|tojson }},  // we want to prevent & being converted to &amp; here
                 pageLength: 10,
                 serverSide: true,
+                order: [[0, "desc"]],
                 columnDefs: [{
                     "targets": [3, 4],
                     "orderable": false
